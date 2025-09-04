@@ -1,7 +1,7 @@
 #ifndef FUN4ALL_YEAR2_FITTING_C
 #define FUN4ALL_YEAR2_FITTING_C
 
-#include <Calo_Fitting.C>
+#include "/sphenix/u/bseidlitz/work/devMac/macros/CaloProduction/condor/Calo_Fitting.C"
 #include <QA.C>
 
 #include <calotrigger/TriggerRunInfoReco.h>
@@ -21,26 +21,26 @@
 #include <fun4all/Fun4AllUtils.h>
 #include <fun4all/SubsysReco.h>
 
-#include <phool/recoConsts.h>
+#include <mbd/MbdReco.h>
+#include <globalvertex/GlobalVertexReco.h>
 
-#include <calopacketskimmer/CaloPacketSkimmer.h>
+#include <phool/recoConsts.h>
 
 R__LOAD_LIBRARY(libfun4allraw.so)
 R__LOAD_LIBRARY(libcalovalid.so)
 R__LOAD_LIBRARY(libcalotrigger.so)
-R__LOAD_LIBRARY(libCaloPacketSkimmer.so);
 
 // this pass containis the reco process that's stable wrt time stamps(raw tower building)
-void Fun4All_New_Year2_Fitting(int nEvents = 100,
-			   const std::string inlist = "files.list",
-                           const std::string &outfile = "DST_CALOFITTING_run2auau_ana487_2024p018_v001",
-                           const std::string &outfile_hist = "HIST_CALOFITTINGQA_run2auau_ana487_2024p018_v001",
+void Fun4All_PrepDataFitting(int nEvents = 1e4,
+			   const std::string inlist = "test.list",
+                           const std::string &outfile = "DST_CALOFITTING",
+                           const std::string &outfile_hist = "HIST_CALOFITTINGQA",
                            const std::string &dbtag = "ProdA_2024")
 {
   gSystem->Load("libg4dst.so");
 
   Fun4AllServer *se = Fun4AllServer::instance();
-  se->Verbosity(1);
+  se->Verbosity(0);
   se->VerbosityDownscale(1000);
 
   recoConsts *rc = recoConsts::instance();
@@ -56,8 +56,13 @@ void Fun4All_New_Year2_Fitting(int nEvents = 100,
   TriggerRunInfoReco *triggerinfo = new TriggerRunInfoReco();
   se->registerSubsystem(triggerinfo);
 
-  CaloPacketSkimmer *calopacket = new CaloPacketSkimmer();
-  se->registerSubsystem(calopacket);
+  // MBD/BBC Reconstruction
+  MbdReco *mbdreco = new MbdReco();
+  se->registerSubsystem(mbdreco);
+
+  // Official vertex storage
+  GlobalVertexReco *gvertex = new GlobalVertexReco();
+  se->registerSubsystem(gvertex);
 
   Process_Calo_Fitting();
 
