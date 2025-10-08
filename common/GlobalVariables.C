@@ -73,7 +73,7 @@ namespace TRACKING
 {
   std::string TrackNodeName = "SvtxTrackMap";
   bool pp_mode = false;
-  double pp_extended_readout_time = 7000.0;  // ns
+  double pp_extended_readout_time = 24900.0;  // ns
   bool reco_tpc_is_configured = false;
   int reco_tpc_maxtime_sample = 425;
   int reco_tpc_time_presample = 40;  // 120 - 80
@@ -107,7 +107,7 @@ namespace G4MICROMEGAS
 
 namespace G4TPC
 {
-  double tpc_drift_velocity_reco = 8.0 / 1000.0;  // cm/ns   // this is the Ne version of the gas, it is very close to our Ar-CF4 mixture
+  double tpc_drift_velocity_reco = 7.55 / 1000.0;  // cm/ns   // this is the Ne version of the gas, it is very close to our Ar-CF4 mixture
   double tpc_tzero_reco = 0.0;  // ns  
 }
 

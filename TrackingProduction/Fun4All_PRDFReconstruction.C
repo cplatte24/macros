@@ -4,6 +4,7 @@
  * which package  hits, clusters, and clusters on tracks into trees 
  * for analysis.
  */
+#include "../detectors/sPHENIX/G4Setup_sPHENIX.C"
 
 #include <G4_ActsGeom.C>
 #include <G4_Magnet.C>
@@ -184,7 +185,7 @@ void Fun4All_PRDFReconstruction(
   rc->set_IntFlag("RUNNUMBER", runnumber);
 
   Enable::CDB = true;
-  rc->set_StringFlag("CDB_GLOBALTAG", "ProdA_2024");
+  rc->set_StringFlag("CDB_GLOBALTAG", "newcdbtag");
   
   rc->set_uint64Flag("TIMESTAMP", runnumber);
 
@@ -205,12 +206,20 @@ void Fun4All_PRDFReconstruction(
 	   << std::endl;
 
   CDBInterface::instance()->Verbosity(1);
-  std::string geofile = CDBInterface::instance()->getUrl("Tracking_Geometry");
-  std::cout << "CDB tracking geometry file "<<geofile << std::endl;
-  Fun4AllRunNodeInputManager *ingeo = new Fun4AllRunNodeInputManager("GeoIn");
-  ingeo->AddFile(geofile);
-  se->registerInputManager(ingeo);
+  //std::string geofile = CDBInterface::instance()->getUrl("Tracking_Geometry");
+  //std::cout << "CDB tracking geometry file "<<geofile << std::endl;
+  //Fun4AllRunNodeInputManager *ingeo = new Fun4AllRunNodeInputManager("GeoIn");
+  //ingeo->AddFile(geofile);
+  //se->registerInputManager(ingeo);
 
+  Enable::MVTX = true;
+  Enable::INTT = true;
+  Enable::TPC = true;
+  Enable::MICROMEGAS = true;
+
+  G4Init();
+  G4Setup();
+  
   CDBInterface *cdb = CDBInterface::instance();
 
   // can use for zero field
