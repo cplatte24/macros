@@ -48,8 +48,7 @@ R__LOAD_LIBRARY(libTrackingDiagnostics.so)
 R__LOAD_LIBRARY(libtrackingqa.so)
 void Fun4All_TrackFitting(
     const int nEvents = 10,
-    const std::string seedfilename = "/sphenix/lustre01/sphnxpro/production/run2pp/physics/ana494_2024p021_v001/DST_TRKR_SEED/run_00053800_00053900/dst/DST_TRKR_SEED_run2pp_ana494_2024p021_v001-00053877-00000.root",
-    const std::string clusterfilename = "/sphenix/lustre01/sphnxpro/production/run2pp/physics/ana494_2024p021_v001/DST_TRKR_CLUSTER/run_00053800_00053900/dst/DST_TRKR_CLUSTER_run2pp_ana494_2024p021_v001-00053877-00000.root",
+    const std::string seedfilename = "/sphenix/lustre01/sphnxpro/production/run3pp/physics/ana538_2025p011_v001/DST_TRKR_SEED/run_00079500_00079600/DST_TRKR_SEED_run3pp_ana538_2025p011_v001-00079516-00009.root",
     const std::string outfilename = "clusters_seeds",
     const bool convertSeeds = false)
 {
@@ -106,7 +105,6 @@ void Fun4All_TrackFitting(
 
   // to turn on the default static corrections, enable the two lines below
   G4TPC::ENABLE_STATIC_CORRECTIONS = true;
-  G4TPC::USE_PHI_AS_RAD_STATIC_CORRECTIONS = false;
 
   //to turn on the average corrections, enable the three lines below
   //note: these are designed to be used only if static corrections are also applied
@@ -114,6 +112,7 @@ void Fun4All_TrackFitting(
   G4TPC::USE_PHI_AS_RAD_AVERAGE_CORRECTIONS = false;
    // to use a custom file instead of the database file:
   G4TPC::average_correction_filename = CDBInterface::instance()->getUrl("TPC_LAMINATION_FIT_CORRECTION");
+
   G4MAGNET::magfield_rescale = 1;
   TrackingInit();
 
@@ -121,13 +120,9 @@ void Fun4All_TrackFitting(
   hitsinseed->fileopen(seedfilename);
   se->registerInputManager(hitsinseed);
 
-  auto hitsinclus = new Fun4AllDstInputManager("ClusterInputManager");
-  hitsinclus->fileopen(clusterfilename);
-  se->registerInputManager(hitsinclus);
-
   Reject_Laser_Events();
   
-  Tracking_Reco_TrackMatching_run2pp();
+  Tracking_Reco_TrackMatching_run2pp("TRKR_CLUSTER_SEED");
   
   
   /*
@@ -146,19 +141,20 @@ void Fun4All_TrackFitting(
   }
   else
   {
-    Tracking_Reco_TrackFit_run2pp(theOutfile);
+    Tracking_Reco_TrackFit_run2pp(theOutfile,"TRKR_CLUSTER_SEED");
   }
 
   //vertexing and propagation to vertex
-  Tracking_Reco_Vertex_run2pp();
+  Tracking_Reco_Vertex_run2pp("TRKR_CLUSTER_SEED");
 
-  TString residoutfile = theOutfile + "_resid.root";
+  TString residoutfile = "/sphenix/tg/tg01/hf/jdosbo/HP26/" + theOutfile + "_resid.root";
   std::string residstring(residoutfile.Data());
 
   auto resid = new TrackResiduals("TrackResiduals");
   resid->outfileName(residstring);
   resid->alignment(false);
-
+  std::string contname = "TRKR_CLUSTER_SEED";
+  resid->setTrkrClusterContainerName(contname);
   // adjust track map name
   if (G4TRACKING::SC_CALIBMODE && !G4TRACKING::convert_seeds_to_svtxtracks)
   {
@@ -169,7 +165,7 @@ void Fun4All_TrackFitting(
     }
   }
 
-  resid->clusterTree();
+  //resid->clusterTree();
   resid->convertSeeds(G4TRACKING::convert_seeds_to_svtxtracks);
   resid->Verbosity(0);
   se->registerSubsystem(resid);

@@ -4,29 +4,19 @@
  * with the default set up for K Short reconstruction
  */
 
-#include <fun4all/Fun4AllUtils.h>
+// GlobalVariables.C has to be first, an empty line afterwards
+// protects its position against reshuffling by clang-format
+#include <GlobalVariables.C>
+
 #include <G4_ActsGeom.C>
 #include <G4_Global.C>
 #include <G4_Magnet.C>
-#include <GlobalVariables.C>
 #include <QA.C>
 #include <Trkr_Clustering.C>
 #include <Trkr_Reco.C>
 #include <Trkr_RecoInit.C>
 #include <Trkr_TpcReadoutInit.C>
 
-#include <ffamodules/CDBInterface.h>
-
-#include <fun4all/Fun4AllDstInputManager.h>
-#include <fun4all/Fun4AllDstOutputManager.h>
-#include <fun4all/Fun4AllInputManager.h>
-#include <fun4all/Fun4AllOutputManager.h>
-#include <fun4all/Fun4AllRunNodeInputManager.h>
-#include <fun4all/Fun4AllServer.h>
-
-#include <phool/recoConsts.h>
-
-#include <cdbobjects/CDBTTree.h>
 
 #include <tpccalib/PHTpcResiduals.h>
 
@@ -39,9 +29,19 @@
 
 #include <kfparticle_sphenix/KFParticle_sPHENIX.h>
 
-#include <stdio.h>
+#include <ffamodules/CDBInterface.h>
 
-R__LOAD_LIBRARY(libkfparticle_sphenix.so)
+#include <fun4all/Fun4AllDstInputManager.h>
+#include <fun4all/Fun4AllDstOutputManager.h>
+#include <fun4all/Fun4AllInputManager.h>
+#include <fun4all/Fun4AllOutputManager.h>
+#include <fun4all/Fun4AllRunNodeInputManager.h>
+#include <fun4all/Fun4AllServer.h>
+#include <fun4all/Fun4AllUtils.h>
+
+#include <phool/recoConsts.h>
+
+
 
 R__LOAD_LIBRARY(libfun4all.so)
 R__LOAD_LIBRARY(libffamodules.so)
@@ -49,11 +49,13 @@ R__LOAD_LIBRARY(libphool.so)
 R__LOAD_LIBRARY(libcdbobjects.so)
 R__LOAD_LIBRARY(libTrackingDiagnostics.so)
 R__LOAD_LIBRARY(libtrackingqa.so)
+R__LOAD_LIBRARY(libkfparticle_sphenix.so)
+
 void Fun4All_TrackSeeding(
     const int nEvents = 5,
-    const std::string clusterfilename = "DST_TRKR_CLUSTER_run2pp_ana494_2024p021_v001-00053877-00000.root",
-    const std::string dir = "/sphenix/lustre01/sphnxpro/production/run2pp/physics/ana494_2024p021_v001/DST_TRKR_CLUSTER/run_00053800_00053900/dst/",
-    const std::string outfilename = "clusters_seeds",
+    const std::string &clusterfilename = "DST_TRKR_CLUSTER_run2pp_ana517_2024p024_v001-00053877-02611.root",
+    const std::string &dir = "/sphenix/lustre01/sphnxpro/production/run2pp/physics/ana517_2024p024_v001/DST_TRKR_CLUSTER/run_00053800_00053900/dst/",
+    const std::string &outfilename = "clusters_seeds",
     const bool convertSeeds = false,
     const bool doKFParticle = false)
 {
@@ -62,12 +64,11 @@ void Fun4All_TrackSeeding(
 
   G4TRACKING::convert_seeds_to_svtxtracks = convertSeeds;
   std::cout << "Converting to seeds : " << G4TRACKING::convert_seeds_to_svtxtracks << std::endl;
-  std::pair<int, int>
-      runseg = Fun4AllUtils::GetRunSegment(clusterfilename);
+  std::pair<int, int> runseg = Fun4AllUtils::GetRunSegment(clusterfilename);
   int runnumber = runseg.first;
   int segment = runseg.second;
 
-  auto rc = recoConsts::instance();
+  auto *rc = recoConsts::instance();
   rc->set_IntFlag("RUNNUMBER", runnumber);
 
   Enable::CDB = true;
@@ -86,15 +87,15 @@ void Fun4All_TrackSeeding(
             << " vdrift: " << G4TPC::tpc_drift_velocity_reco
             << std::endl;
 
-  string outDir = "myKShortReco/";
-  string outputFileName = "outputKFParticle_" + to_string(runnumber) + "_" + to_string(segment) + ".root";
-  string outputRecoDir = outDir + "inReconstruction/";
-  string outputRecoFile = outputRecoDir + outputFileName;
+  std::string outDir = "myKShortReco/";
+  std::string outputFileName = "outputKFParticle_" + std::to_string(runnumber) + "_" + std::to_string(segment) + ".root";
+  std::string outputRecoDir = outDir + "inReconstruction/";
+  std::string outputRecoFile = outputRecoDir + outputFileName;
 
   if(doKFParticle){
-    string makeMainDirectory = "mkdir -p " + outDir;
+    std::string makeMainDirectory = "mkdir -p " + outDir;
     system(makeMainDirectory.c_str());
-    string makeDirectory = "mkdir -p " + outputRecoDir;
+    std::string makeDirectory = "mkdir -p " + outputRecoDir;
     system(makeDirectory.c_str());
   }
 
@@ -105,13 +106,12 @@ void Fun4All_TrackSeeding(
    */
   G4TRACKING::SC_CALIBMODE = false;
   TRACKING::pp_mode = true;
-  
+
   Enable::MVTX_APPLYMISALIGNMENT = true;
   ACTSGEOM::mvtx_applymisalignment = Enable::MVTX_APPLYMISALIGNMENT;
-  
-  TString outfile = outfilename + "_" + runnumber + "-" + segment + ".root";
-  std::string theOutfile = outfile.Data();
-  auto se = Fun4AllServer::instance();
+
+  std::string theOutfile = outfilename + "_" + std::to_string(runnumber) + "-" + std::to_string(segment) + ".root";
+  auto *se = Fun4AllServer::instance();
   se->Verbosity(1);
 
 
@@ -124,19 +124,15 @@ void Fun4All_TrackSeeding(
 
   // to turn on the default static corrections, enable the two lines below
   G4TPC::ENABLE_STATIC_CORRECTIONS = true;
-  G4TPC::USE_PHI_AS_RAD_STATIC_CORRECTIONS = false;
 
   //to turn on the average corrections, enable the three lines below
   //note: these are designed to be used only if static corrections are also applied
   G4TPC::ENABLE_AVERAGE_CORRECTIONS = true;
-  G4TPC::USE_PHI_AS_RAD_AVERAGE_CORRECTIONS = false;
-   // to use a custom file instead of the database file:
-  G4TPC::average_correction_filename = CDBInterface::instance()->getUrl("TPC_LAMINATION_FIT_CORRECTION");
-   
+
   G4MAGNET::magfield_rescale = 1;
   TrackingInit();
 
-  auto hitsinclus = new Fun4AllDstInputManager("ClusterInputManager");
+  auto *hitsinclus = new Fun4AllDstInputManager("ClusterInputManager");
   hitsinclus->fileopen(inputclusterRawHitFile);
   se->registerInputManager(hitsinclus);
 
@@ -146,17 +142,17 @@ void Fun4All_TrackSeeding(
   /*
    * Begin Track Seeding
    */
-  
+
   Tracking_Reco_TrackSeed_run2pp();
   Tracking_Reco_TrackMatching_run2pp();
-  
+
   /*
    * Either converts seeds to tracks with a straight line/helix fit
    * or run the full Acts track kalman filter fit
    */
   if (G4TRACKING::convert_seeds_to_svtxtracks)
   {
-    auto converter = new TrackSeedTrackMapConverter;
+    auto *converter = new TrackSeedTrackMapConverter;
     // Default set to full SvtxTrackSeeds. Can be set to
     // SiliconTrackSeedContainer or TpcTrackSeedContainer
     converter->setTrackSeedName("SvtxTrackSeedContainer");
@@ -222,10 +218,9 @@ void Fun4All_TrackSeeding(
   se->registerSubsystem(kfparticle);
   }
 
-  TString residoutfile = theOutfile + "_resid.root";
-  std::string residstring(residoutfile.Data());
+  std::string residstring = theOutfile + "_resid.root";
 
-  auto resid = new TrackResiduals("TrackResiduals");
+  auto *resid = new TrackResiduals("TrackResiduals");
   resid->outfileName(residstring);
   resid->clusterTree();
   resid->alignment(false);
@@ -257,16 +252,15 @@ void Fun4All_TrackSeeding(
   CDBInterface::instance()->Print();
   if (Enable::QA)
   {
-    TString qaname = theOutfile + "_qa.root";
-    std::string qaOutputFileName(qaname.Data());
+    std::string qaOutputFileName = theOutfile + "_qa.root";
     QAHistManagerDef::saveQARootFile(qaOutputFileName);
   }
 
   if(doKFParticle){
-    ifstream file(outputRecoFile.c_str());
+    std::ifstream file(outputRecoFile.c_str());
     if (file.good())
     {
-      string moveOutput = "mv " + outputRecoFile + " " + outDir;
+      std::string moveOutput = "mv " + outputRecoFile + " " + outDir;
       system(moveOutput.c_str());
     }
   }

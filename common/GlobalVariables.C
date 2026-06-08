@@ -2,6 +2,8 @@
 #define MACRO_GLOBALVARIABLES_C
 
 #include <g4decayer/EDecayType.hh>
+
+#include <cstdint>
 #include <limits>
 #include <set>
 #include <sstream>
@@ -23,11 +25,19 @@ namespace Input
   //! nominal beam parameter configuration choices for BEAM_CONFIGURATION
   enum BeamConfiguration
   {
-    AA_COLLISION = 0,
+    AuAu_COLLISION = 0,
+    AA_COLLISION = AuAu_COLLISION,
     pA_COLLISION = 1,
     pp_COLLISION = 2,
     pp_ZEROANGLE = 3,
-    ppg02 = 4
+    ppg02 = 4,
+    mRad_00 = 5,
+    mRad_05 = 6,
+    mRad_10 = 7,
+    mRad_15 = 8,
+    mRad_075 = 9,
+    OOdNdEta = 10,
+    OO_COLLISION = 11
   };
 
   BeamConfiguration BEAM_CONFIGURATION = AA_COLLISION;
@@ -108,8 +118,8 @@ namespace G4MICROMEGAS
 namespace G4TPC
 {
   double tpc_drift_velocity_reco = 7.55 / 1000.0;  // cm/ns   // this is the Ne version of the gas, it is very close to our Ar-CF4 mixture
-  double tpc_tzero_reco = 0.0;  // ns  
-}
+  double tpc_tzero_reco = 0.0;                     // ns
+}  // namespace G4TPC
 
 namespace G4TRACKING
 {
@@ -118,21 +128,21 @@ namespace G4TRACKING
 
 namespace EVTGENDECAYER
 {
-  std::string DecayFile = "";  // The default is no need to force decay anything and use the default file DECAY.DEC from the official EvtGen software
-                               // DECAY.DEC is located at: https://gitlab.cern.ch/evtgen/evtgen/-/blob/master/DECAY.DEC
+  std::string DecayFile;  // The default is no need to force decay anything and use the default file DECAY.DEC from the official EvtGen software
+                          // DECAY.DEC is located at: https://gitlab.cern.ch/evtgen/evtgen/-/blob/master/DECAY.DEC
 }
 
 namespace CDB
 {
   std::string global_tag = "MDC2";
   uint64_t timestamp = 6;
+  bool is_data_reco = false;
 }  // namespace CDB
 
 // multi purpose functions
 // cheap check via extension if we have a root file (pre c++17)
 bool isRootFile(const std::string &fname)
 {
-  std::string tmp = fname;
   size_t i = fname.rfind('.', fname.length());
   if (i != std::string::npos)
   {
@@ -144,7 +154,7 @@ bool isRootFile(const std::string &fname)
   return false;
 }
 
-bool isConstantField(const std::string &name, double &fieldstrength)
+bool isConstantField(const std::string & /*name*/, double &fieldstrength)
 {
   std::istringstream stringline(G4MAGNET::magfield_tracking);
   stringline >> fieldstrength;
@@ -153,10 +163,8 @@ bool isConstantField(const std::string &name, double &fieldstrength)
     fieldstrength = std::numeric_limits<double>::quiet_NaN();
     return false;
   }
-  else
-  {
-    return true;
-  }
+
+  return true;
 }
 
 #endif
